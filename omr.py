@@ -7,15 +7,20 @@ import cv2
 
 #take command line args
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True, help="path to the input image")
+ap.add_argument("-i", "--image", required=True)
 args = vars(ap.parse_args())
 
-# define correct answer
-ANSWER_KEY = {  0: 1, 
+no_of_options = 5
+total_marks = 5.0 # 1 mark for each correct answer
+
+# define correct answer (question : correct option )
+ANSWER_KEY = {  
+				0: 1, 
                 1: 4, 
                 2: 0, 
                 3: 3, 
-                4: 1    }
+                4: 1    
+			}
 
 image = cv2.imread(args["image"])  # read image
 
@@ -39,8 +44,8 @@ questionCnts = contours.sort_contours(questionCnts, method="top-to-bottom")[0]
 correct = 0
 
 # traversing the questions
-for (q, i) in enumerate(np.arange(0, len(questionCnts), 5)):
-	cnts = contours.sort_contours(questionCnts[i:i + 5])[0]
+for (q, i) in enumerate(np.arange(0, len(questionCnts), no_of_options)):
+	cnts = contours.sort_contours(questionCnts[i:i + no_of_options])[0]
 	bubbled = None
     
     # loop over the sorted contours
@@ -57,18 +62,23 @@ for (q, i) in enumerate(np.arange(0, len(questionCnts), 5)):
 
     # initialize the contour color and the index of the correct answer
 	color = (0, 0, 255)
+
+	if q>no_of_options: 		# image has more number of options
+		print("number of options do not match")
+		exit()
+
 	k = ANSWER_KEY[q]
 	# check to see if the bubbled answer is correct
 	if k == bubbled[1]:
 		color = (0, 255, 0)
 		correct += 1
-	# draw the outline of the correct answer on the test
+	# draw the outline of the correct/incorrect answer on the test
 	cv2.drawContours(image, [cnts[k]], -1, color, 3)
 
 # grab the test taker
-score = (correct / 5.0) * 100
+score = (correct / total_marks) * 100
 print("score: {:.2f}%".format(score))
-cv2.putText(image, "{:.2f}%".format(score), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
+cv2.putText(image, "{:.2f}%".format(score), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
 
 
 cv2.imshow("OMR", image)
